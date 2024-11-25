@@ -80,6 +80,14 @@ private:
     }
 public:
 
+    bool checkEmpty(){
+        if (tasks.empty()){
+            cout << "No tasks in the list. Please add a task first." << endl;
+            return true;
+        }
+        return false;
+    }
+
     void addTask(const string& taskName) {
         Task newTask(taskName);
         tasks.push_back(newTask);
@@ -91,6 +99,7 @@ public:
     }
 
     void removeTask(int taskIndex) {
+        if (checkEmpty()) return;
         if (taskIndex >= 0 && taskIndex < tasks.size()) {
             Task removedTask = tasks[taskIndex];
             tasks.erase(tasks.begin() + taskIndex);
@@ -103,6 +112,7 @@ public:
     }
 
     void markComplete(int taskIndex) {
+        if (checkEmpty()) return;
         if (taskIndex >= 0 && taskIndex < tasks.size()) {
             tasks[taskIndex].status = "Complete";
             undoStack.push(make_pair("mark_incomplete", tasks[taskIndex]));
@@ -111,6 +121,7 @@ public:
     }
 
     void setTaskPriority(int taskIndex, int priority) {
+        if (checkEmpty()) return;
         if (taskIndex >= 0 && taskIndex < tasks.size()) {
             int oldPriority = tasks[taskIndex].priority;
             tasks[taskIndex].priority = priority;
@@ -125,6 +136,7 @@ public:
     }
 
     void setTaskDueDate(int taskIndex, const string& dueDate) {
+        if (checkEmpty()) return;
         if (taskIndex < 0 || taskIndex >= tasks.size()) {
             cout << "Invalid task index. Please provide a valid task index." << endl;
             return;
@@ -164,6 +176,7 @@ public:
     }
 
     void addTaskCategory(int taskIndex, const string& category) {
+        if (checkEmpty()) return;
         if (taskIndex >= 0 && taskIndex < tasks.size()) {
             tasks[taskIndex].categories.push_back(category);
             updateCategoryCount(tasks[taskIndex]);
@@ -173,6 +186,7 @@ public:
     }
 
     void setReminder(int taskIndex, const string& reminderDate) {
+        if (checkEmpty()) return;
         if (taskIndex < 0 || taskIndex >= tasks.size()) {
             cout << "Invalid task index. Please provide a valid task index." << endl;
             return;
@@ -374,6 +388,7 @@ void displayTaskDependencies(int taskIndex) {
     }
 
     void removeDependency(int dependentIndex, int dependencyIndex) {
+        if (checkEmpty()) return;
         if (dependentIndex >= 0 && dependentIndex < tasks.size() && dependencyIndex >= 0 && dependencyIndex < tasks.size()) {
             tasks[dependentIndex].dependencies.erase(dependencyIndex);
         } else {
@@ -382,6 +397,7 @@ void displayTaskDependencies(int taskIndex) {
     }
 
     void updateDependencies(int taskIndex) {
+        if (checkEmpty()) return;
         if (taskIndex >= 0 && taskIndex < tasks.size()) {
             tasks[taskIndex].dependencies.clear();
             cout << "Enter updated indices of tasks that " << tasks[taskIndex].name << " depends on (-1 to stop): ";
@@ -410,6 +426,41 @@ void displayTaskDependencies(int taskIndex) {
             }
         }
     }
+    
+    // void searchWithBoyerMoore(const string& text, const string& pattern) {
+    //     int n = text.length();
+    //     int m = pattern.length();
+    //     vector<int> badChar(256, -1);
+
+    //     // Preprocessing for bad character heuristic
+    //     for (int i = 0; i < m; i++) {
+    //         badChar[static_cast<unsigned char>(pattern[i])] = i;
+    //     }
+
+    //     cout << "Search results for pattern \"" << pattern << "\":" << endl;
+        
+    //     int s = 0;
+    //     bool found = false;
+    //     while (s <= (n - m)) {
+    //         int j = m - 1;
+
+    //         while (j >= 0 && pattern[j] == text[s + j]) {
+    //             j--;
+    //         }
+
+    //         if (j < 0) {
+    //             cout << "Pattern found at index " << s << endl;
+    //             found = true;
+    //             s += (s + m < n) ? m - badChar[static_cast<unsigned char>(text[s + m])] : 1;
+    //         } else {
+    //             s += max(1, j - badChar[static_cast<unsigned char>(text[s + j])]);
+    //         }
+    //     }
+
+    //     if (!found) {
+    //         cout << "Pattern not found in the text." << endl;
+    //     }
+    // }
 
     void displayStatistics() {
         int totalTasks = tasks.size();
@@ -474,6 +525,7 @@ void displayTaskDependencies(int taskIndex) {
 
 
     void addTaskNotes(int taskIndex, const string& notes) {
+        if (checkEmpty()) return;
         if (taskIndex >= 0 && taskIndex < tasks.size()) {
             tasks[taskIndex].notes += notes;
         } else {
@@ -490,6 +542,7 @@ void displayTaskDependencies(int taskIndex) {
     }
 
 void changeTaskCategory(int taskIndex) {
+    if (checkEmpty()) return;
     if (taskIndex >= 0 && taskIndex < tasks.size()) {
         // Display current categories for the task
         cout << "Current categories for task \"" << tasks[taskIndex].name << "\":" << endl;
@@ -567,7 +620,7 @@ int main() {
         cout << "3.  ✅ Mark Complete\n";
         cout << "4.  ⭐️ Set Priority\n";
         cout << "5.  📅 Set Due Date\n";
-        cout << "6.  🏷️  Add Category\n";
+        cout << "6.  🏷️ Add Category\n";
         cout << "7.  ⏰ Set Reminder\n";
         cout << "8.  📊 Display Statistics\n";
         cout << "9.  📈 Display Category Count\n";
@@ -637,6 +690,13 @@ int main() {
                         todoList.addTaskNotes(todoList.getTaskCount() - 1, input);
                     }
 
+                    // Reminder
+                    cout << "⏰ Enter reminder date (YYYY-MM-DD, or press Enter to skip): ";
+                    getline(cin, input);
+                    if (!input.empty()) {
+                        todoList.setReminder(todoList.getTaskCount() - 1, input);
+                    }
+
                     cout << "✨ Task details added successfully! ✨\n";
                 }
                 break;
@@ -644,20 +704,25 @@ int main() {
 
 
             case 2: {
+                if (todoList.checkEmpty()) break;
                 int taskIndex;
                 cout << "Enter task index to remove: ";
                 cin >> taskIndex;
                 todoList.removeTask(taskIndex - 1);
                 break;
             }
+
             case 3: {
+                if (todoList.checkEmpty()) break;
                 int taskIndex;
                 cout << "Enter task index to mark complete: ";
                 cin >> taskIndex;
                 todoList.markComplete(taskIndex - 1);
                 break;
             }
+
             case 4: {
+                if (todoList.checkEmpty()) break;
                 int taskIndex, priority;
                 cout << "Enter task index to set priority: ";
                 cin >> taskIndex;
@@ -671,7 +736,9 @@ int main() {
                 todoList.setTaskPriority(taskIndex - 1, priority);
                 break;
             }
+
             case 5: {
+                if (todoList.checkEmpty()) break;
                 int taskIndex;
                 string dueDate;
                 cout << "Enter task index to set due date: ";
@@ -709,7 +776,9 @@ int main() {
                 }
                 break;
             }
+
             case 6: {
+                if (todoList.checkEmpty()) break;
                 int taskIndex;
                 string category;
                 cout << "Enter task index to add category: ";
@@ -720,7 +789,9 @@ int main() {
                 todoList.addTaskCategory(taskIndex - 1, category);
                 break;
             }
+
             case 7: {
+                if (todoList.checkEmpty()) break;
                 int taskIndex;
                 string reminderDate;
                 cout << "Enter task index for setting reminder: ";
@@ -730,30 +801,39 @@ int main() {
                 todoList.setReminder(taskIndex - 1, reminderDate);
                 break;
             }
+
             case 8:
                 todoList.displayStatistics();
                 break;
+
             case 9:
                 todoList.displayCategoryCount();
                 break;
+
             case 10: {
+                if (todoList.checkEmpty()) break;
                 int taskIndex;
                 cout << "Enter task index to set dependencies: ";
                 cin >> taskIndex;
                 todoList.setTaskDependencies(taskIndex - 1);
                 break;
             }
+
             case 11: {
+                if (todoList.checkEmpty()) break;
                 int taskIndex;
                 cout << "Enter task index to display dependencies: ";
                 cin >> taskIndex;
                 todoList.displayTaskDependencies(taskIndex - 1);
                 break;
             }
+
             case 12:
                 todoList.visualizeTaskDependencies();
                 break;
+
             case 13: {
+                if (todoList.checkEmpty()) break;
                 int dependentIndex, dependencyIndex;
                 cout << "Enter dependent task index: ";
                 cin >> dependentIndex;
@@ -762,13 +842,16 @@ int main() {
                 todoList.removeDependency(dependentIndex - 1, dependencyIndex - 1);
                 break;
             }
+
             case 14: {
+                if (todoList.checkEmpty()) break;
                 int taskIndex;
                 cout << "Enter task index to update dependencies: ";
                 cin >> taskIndex;
                 todoList.updateDependencies(taskIndex - 1);
                 break;
             }
+
             case 15: {
                 string keyword;
                 cout << "Enter keyword to search: ";
@@ -776,10 +859,13 @@ int main() {
                 todoList.taskSearch(keyword);
                 break;
             }
+
             case 16:
                 todoList.dueDateAlerts();
                 break;
+
             case 17: {
+                if (todoList.checkEmpty()) break;
                 int taskIndex;
                 string notes;
                 cout << "Enter task index to add notes: ";
@@ -790,19 +876,23 @@ int main() {
                 todoList.addTaskNotes(taskIndex - 1, notes);
                 break;
             }
-                case 18: {
-                    // Undo
-                    todoList.undo();
-                    break;
-                }
-                case 19: {
-                    // Redo
-                    todoList.redo();
-                    break;
-                }
+
+            case 18: {
+                // Undo
+                todoList.undo();
+                break;
+            }
+
+            case 19: {
+                // Redo
+                todoList.redo();
+                break;
+            }
+
             case 20:
                 cout << "👋 Thank you for using ToDo List! Goodbye!\n";
                 return 0;
+            
             default:
                 cout << "❌ Invalid choice. Please try again.\n";
 
