@@ -9,6 +9,7 @@
 #include <sstream>
 #include <iomanip>
 #include <cstdlib>
+#include <thread>
 using namespace std;
 
 /*
@@ -172,13 +173,44 @@ public:
     }
 
     void setReminder(int taskIndex, const string& reminderDate) {
-        if (taskIndex >= 0 && taskIndex < tasks.size()) {
+        if (taskIndex < 0 || taskIndex >= tasks.size()) {
+            cout << "Invalid task index. Please provide a valid task index." << endl;
+            return;
+        }
+
+        // Check date format (YYYY-MM-DD)
+        if (reminderDate.length() != 10 || reminderDate[4] != '-' || reminderDate[7] != '-') {
+            cout << "Invalid date format. Please use YYYY-MM-DD format." << endl;
+            return;
+        }
+
+        try {
+            int year = stoi(reminderDate.substr(0, 4));
+            int month = stoi(reminderDate.substr(5, 2));
+            int day = stoi(reminderDate.substr(8, 2));
+
+            // Basic date validation
+            if (year < 2024 || month < 1 || month > 12 || day < 1 || day > 31) {
+                cout << "Invalid date values." << endl;
+                return;
+            }
+
+            // Check days in month
+            bool isLeapYear = (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
+            int daysInMonth[] = {31, (isLeapYear ? 29 : 28), 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+            if (day > daysInMonth[month - 1]) {
+                cout << "Invalid day for the given month." << endl;
+                return;
+            }
+
             tasks[taskIndex].reminderDate = reminderDate;
             cout << "Reminder set for task \"" << tasks[taskIndex].name << "\" on " << reminderDate << endl;
-        } else {
-            cout << "Invalid task index. Please provide a valid task index." << endl;
+        }
+        catch (const exception& e) {
+            cout << "Invalid date format. Please use YYYY-MM-DD format." << endl;
         }
     }
+
 
 
     void updateCategoryCount(const Task& task, bool decrement = false) {
@@ -295,6 +327,7 @@ void setTaskDependencies(int taskIndex) {
         cout << "Invalid task index. Please provide a valid task index." << endl;
     }
 }
+
 void displayTaskDependencies(int taskIndex) {
     if (taskIndex >= 0 && taskIndex < tasks.size()) {
         const Task& task = tasks[taskIndex];
@@ -308,6 +341,25 @@ void displayTaskDependencies(int taskIndex) {
     }
 }
 
+    void visualizeDependencyGraph() {
+        cout << "\nDependency Graph:\n";
+        for (size_t i = 0; i < tasks.size(); ++i) {
+            // Print task name
+            cout << "\n" << tasks[i].name << "\n";
+            
+            // Print arrow connections
+            for (int depIndex : tasks[i].dependencies) {
+                cout << "|\n";
+                cout << "└─> " << tasks[depIndex].name << "\n";
+            }
+            
+            // Print separator
+            if (!tasks[i].dependencies.empty()) {
+                cout << "\n";
+            }
+        }
+    }
+
     void visualizeTaskDependencies() {
         cout << "Task Dependencies Visualization:" << endl;
         for (size_t i = 0; i < tasks.size(); ++i) {
@@ -316,6 +368,8 @@ void displayTaskDependencies(int taskIndex) {
                 cout << tasks[dependencyIndex].name << ", ";
             }
             cout << endl;
+
+            visualizeDependencyGraph();
         }
     }
 
@@ -370,6 +424,25 @@ void displayTaskDependencies(int taskIndex) {
     }
 
     void dueDateAlerts() {
+
+        if (tasks.empty()) {
+            cout << "No tasks in the list. No due date alerts to show." << endl;
+            return;
+        }
+
+        bool hasDueDates = false;
+        for (const Task& task : tasks) {
+            if (!task.dueDate.empty()) {
+                hasDueDates = true;
+                break;
+            }
+        }
+
+        if (!hasDueDates) {
+            cout << "No tasks have due dates set. You can relax for now! 😊" << endl;
+            return;
+        }
+
         cout << "Due Date Alerts:" << endl;
         time_t currentTime = time(nullptr);
 
@@ -461,10 +534,6 @@ void changeTaskCategory(int taskIndex) {
 
 int main() {
     ToDoList todoList;
-    cout<<endl;
-    cout<<endl;
-    cout<<endl;
-    cout<<endl;
     cout << "\n\n";
     cout << "   ╔══════════════════════════════════════════════════╗" << endl;
     cout << "   ║                 Welcome to ToDoList              ║" << endl;
@@ -477,9 +546,20 @@ int main() {
 
     cin.get();
 
-    system("clear");
+    // system("clear");
+    int run_counter = 0;
     while (true) {
-cout << "\n📋 Your Todo List:\n";
+        if (run_counter != 0){
+            std::this_thread::sleep_for(std::chrono::seconds(3));
+        }
+        system("clear");
+        if (todoList.getTaskCount() > 0) {
+            cout << "\n📋 Your Todo List:\n";
+        }
+        else{
+            if(run_counter>0)
+                cout << "\n📋 Your Todo List is empty.\n";
+        }
         todoList.displayTasks();
         cout << "\n🎯  Menu Options:\n";
         cout << "1.  ➕ Add New Task\n";
@@ -505,7 +585,13 @@ cout << "\n📋 Your Todo List:\n";
 
         int choice;
         cout << "\n👉 Enter your choice: ";
-        cin >> choice;
+        if (!(cin >> choice)) {
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "Invalid input. Please enter a number." << endl;
+            continue;
+        }
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
 
         switch (choice) {
             case 1: {
@@ -721,6 +807,7 @@ cout << "\n📋 Your Todo List:\n";
                 cout << "❌ Invalid choice. Please try again.\n";
 
         }
+        run_counter++;
     }
 
     return 0;
