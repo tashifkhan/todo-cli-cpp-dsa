@@ -12,42 +12,6 @@
 #include <thread>
 using namespace std;
 
-/*
-    @class Task
-    @brief Represents a task with various attributes such as name, status, priority, due date, categories, reminder date, dependencies, and notes.
-
-    The Task class is used to encapsulate the details of a task in a to-do list application. It includes attributes for the task's name, status, priority, due date, categories, reminder date, dependencies, and notes.
-    
-    @var string Task::name
-    The name of the task.
-    
-    @var string Task::status
-    The status of the task (e.g., "Incomplete", "Complete").
-    
-    @var int Task::priority
-    The priority level of the task.
-    
-    @var string Task::dueDate
-    The due date of the task.
-    
-    @var vector<string> Task::categories
-    The categories associated with the task.
-    
-    @var string Task::reminderDate
-    The reminder date for the task.
-    
-    @var unordered_set<int> Task::dependencies
-    The set of task IDs that this task depends on.
-    
-    @var string Task::notes
-    Additional notes for the task.
-    
-    @fn Task::Task(const string& taskName, const string& taskStatus = "Incomplete")
-    @brief Constructs a new Task object with the given name and status.
-    
-    @param taskName The name of the task.
-    @param taskStatus The status of the task, defaulting to "Incomplete".
-*/
 class Task {
 public:
     string name;
@@ -70,6 +34,8 @@ private:
     stack<pair<string, Task> > redoStack;
     priority_queue<pair<int, int> > priorityQueue;
     unordered_map<string, int> categoryCount;
+
+public:
    void addDependency(int dependentIndex, int dependencyIndex) {
         if (dependentIndex >= 0 && dependentIndex < tasks.size() && dependencyIndex >= 0 && dependencyIndex < tasks.size()) {
             tasks[dependentIndex].dependencies.insert(dependencyIndex);
@@ -78,7 +44,6 @@ private:
             cout << "Invalid task indices. Please provide valid task indices." << endl;
         }
     }
-public:
 
     bool checkEmpty(){
         if (tasks.empty()){
@@ -93,7 +58,6 @@ public:
         tasks.push_back(newTask);
         undoStack.push(make_pair("add", newTask));
         redoStack = stack<pair<string, Task> >();
-        // Update priority queue and category count
         priorityQueue.push(make_pair(0, tasks.size() - 1));
         updateCategoryCount(newTask);
     }
@@ -106,7 +70,6 @@ public:
             undoStack.push(make_pair("remove", removedTask));
             redoStack = stack<pair<string, Task> >();
 
-            // Update category count after removal
             updateCategoryCount(removedTask, true);
         }
     }
@@ -126,7 +89,6 @@ public:
             int oldPriority = tasks[taskIndex].priority;
             tasks[taskIndex].priority = priority;
 
-            // Update priority queue if priority is changed
             if (oldPriority != priority) {
                 priorityQueue.push(make_pair(priority, taskIndex));
             }
@@ -142,7 +104,6 @@ public:
             return;
         }
 
-        // Check date format (YYYY-MM-DD)
         if (dueDate.length() != 10 || dueDate[4] != '-' || dueDate[7] != '-') {
             cout << "Invalid date format. Please use YYYY-MM-DD format." << endl;
             return;
@@ -153,13 +114,11 @@ public:
             int month = stoi(dueDate.substr(5, 2));
             int day = stoi(dueDate.substr(8, 2));
 
-            // Basic date validation
             if (year < 2024 || month < 1 || month > 12 || day < 1 || day > 31) {
                 cout << "Invalid date values." << endl;
                 return;
             }
 
-            // Check days in month
             bool isLeapYear = (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
             int daysInMonth[] = {31, (isLeapYear ? 29 : 28), 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
             if (day > daysInMonth[month - 1]) {
@@ -192,7 +151,6 @@ public:
             return;
         }
 
-        // Check date format (YYYY-MM-DD)
         if (reminderDate.length() != 10 || reminderDate[4] != '-' || reminderDate[7] != '-') {
             cout << "Invalid date format. Please use YYYY-MM-DD format." << endl;
             return;
@@ -203,13 +161,11 @@ public:
             int month = stoi(reminderDate.substr(5, 2));
             int day = stoi(reminderDate.substr(8, 2));
 
-            // Basic date validation
             if (year < 2024 || month < 1 || month > 12 || day < 1 || day > 31) {
                 cout << "Invalid date values." << endl;
                 return;
             }
 
-            // Check days in month
             bool isLeapYear = (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
             int daysInMonth[] = {31, (isLeapYear ? 29 : 28), 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
             if (day > daysInMonth[month - 1]) {
@@ -251,7 +207,7 @@ public:
 
             if (action.first == "add") {
                 tasks.pop_back();
-                priorityQueue.pop();  // Remove from priority queue
+                priorityQueue.pop();  
                 updateCategoryCount(action.second, true);
             } else if (action.first == "remove") {
                 tasks.push_back(action.second);
@@ -276,7 +232,7 @@ public:
                 updateCategoryCount(action.second);
             } else if (action.first == "remove") {
                 tasks.pop_back();
-                priorityQueue.pop();  // Remove from priority queue
+                priorityQueue.pop();  
                 updateCategoryCount(action.second, true);
             } else if (action.first == "mark_incomplete") {
                 action.second.status = "Complete";
@@ -291,7 +247,7 @@ public:
             cout << i + 1 << ". [" << tasks[i].status << "] " << tasks[i].name << endl;
             cout << "   Priority: " << tasks[i].priority << endl;
             cout << "   Due Date: " << tasks[i].dueDate << endl;
-            cout << "   Notes:" << tasks[i].notes   << endl;                                     //update
+            cout << "   Notes:" << tasks[i].notes   << endl;                                     
             cout << "   Categories: ";
             for (const string& category : tasks[i].categories) {
                 cout << category << ", ";
@@ -305,7 +261,6 @@ void setTaskDependencies(int taskIndex) {
     if (taskIndex >= 0 && taskIndex < tasks.size()) {
         cout << "Enter indices of tasks that " << tasks[taskIndex].name << " depends on (-1 to stop): ";
 
-        // Clear existing dependencies for the task
         tasks[taskIndex].dependencies.clear();
 
         int dependencyIndex;
@@ -322,7 +277,6 @@ void setTaskDependencies(int taskIndex) {
                 break;
             }
             
-            // Adjust for 1-based indexing and validate
             dependencyIndex--;
             if (dependencyIndex == taskIndex) {
                 cout << "Task cannot depend on itself." << endl;
@@ -347,7 +301,7 @@ void displayTaskDependencies(int taskIndex) {
         const Task& task = tasks[taskIndex];
         cout << "Dependencies for task \"" << task.name << "\": " << endl;
         for (int dependencyIndex : task.dependencies) {
-                if((tasks[dependencyIndex].name).length()!=0)                                               //update
+                if((tasks[dependencyIndex].name).length()!=0)                                            
             cout << "- " << tasks[dependencyIndex].name << endl;
         }
     } else {
@@ -358,16 +312,13 @@ void displayTaskDependencies(int taskIndex) {
     void visualizeDependencyGraph() {
         cout << "\nDependency Graph:\n";
         for (size_t i = 0; i < tasks.size(); ++i) {
-            // Print task name
             cout << "\n" << tasks[i].name << "\n";
             
-            // Print arrow connections
             for (int depIndex : tasks[i].dependencies) {
                 cout << "|\n";
                 cout << "└─> " << tasks[depIndex].name << "\n";
             }
             
-            // Print separator
             if (!tasks[i].dependencies.empty()) {
                 cout << "\n";
             }
@@ -426,41 +377,6 @@ void displayTaskDependencies(int taskIndex) {
             }
         }
     }
-    
-    // void searchWithBoyerMoore(const string& text, const string& pattern) {
-    //     int n = text.length();
-    //     int m = pattern.length();
-    //     vector<int> badChar(256, -1);
-
-    //     // Preprocessing for bad character heuristic
-    //     for (int i = 0; i < m; i++) {
-    //         badChar[static_cast<unsigned char>(pattern[i])] = i;
-    //     }
-
-    //     cout << "Search results for pattern \"" << pattern << "\":" << endl;
-        
-    //     int s = 0;
-    //     bool found = false;
-    //     while (s <= (n - m)) {
-    //         int j = m - 1;
-
-    //         while (j >= 0 && pattern[j] == text[s + j]) {
-    //             j--;
-    //         }
-
-    //         if (j < 0) {
-    //             cout << "Pattern found at index " << s << endl;
-    //             found = true;
-    //             s += (s + m < n) ? m - badChar[static_cast<unsigned char>(text[s + m])] : 1;
-    //         } else {
-    //             s += max(1, j - badChar[static_cast<unsigned char>(text[s + j])]);
-    //         }
-    //     }
-
-    //     if (!found) {
-    //         cout << "Pattern not found in the text." << endl;
-    //     }
-    // }
 
     void displayStatistics() {
         int totalTasks = tasks.size();
@@ -497,7 +413,6 @@ void displayTaskDependencies(int taskIndex) {
         cout << "Due Date Alerts:" << endl;
         time_t currentTime = time(nullptr);
 
-        // Create vector of pairs (dueDate, taskName) for sorting
         vector<pair<time_t, string>> dueDates;
         
         for (const Task& task : tasks) {
@@ -510,10 +425,8 @@ void displayTaskDependencies(int taskIndex) {
             }
         }
 
-        // Sort by due date
         sort(dueDates.begin(), dueDates.end());
 
-        // Display sorted tasks
         for (const auto& task : dueDates) {
             if (task.first < currentTime) {
                 cout << "⚠️  OVERDUE: " << task.second << endl;
@@ -544,7 +457,6 @@ void displayTaskDependencies(int taskIndex) {
 void changeTaskCategory(int taskIndex) {
     if (checkEmpty()) return;
     if (taskIndex >= 0 && taskIndex < tasks.size()) {
-        // Display current categories for the task
         cout << "Current categories for task \"" << tasks[taskIndex].name << "\":" << endl;
         if (tasks[taskIndex].categories.empty()) {
             cout << "No categories assigned." << endl;
@@ -555,11 +467,10 @@ void changeTaskCategory(int taskIndex) {
             cout << i + 1 << ". " << tasks[taskIndex].categories[i] << endl;
         }
 
-        // Ask which category to modify
         cout << "Enter the index of category to modify (1-" << tasks[taskIndex].categories.size() << "): ";
         int categoryIndex;
         cin >> categoryIndex;
-        categoryIndex--; // Convert to 0-based index
+        categoryIndex--; 
 
         if (categoryIndex >= 0 && categoryIndex < tasks[taskIndex].categories.size()) {
             string oldCategory = tasks[taskIndex].categories[categoryIndex];
@@ -568,11 +479,9 @@ void changeTaskCategory(int taskIndex) {
             string newCategory;
             getline(cin, newCategory);
 
-            // Update category counts
             categoryCount[oldCategory]--;
             categoryCount[newCategory]++;
 
-            // Update category name
             tasks[taskIndex].categories[categoryIndex] = newCategory;
             cout << "Category updated successfully!" << endl;
         } else {
@@ -599,7 +508,6 @@ int main() {
 
     cin.get();
 
-    // system("clear");
     int run_counter = 0;
     while (true) {
         if (run_counter != 0){
@@ -654,14 +562,12 @@ int main() {
                 getline(cin, taskName);
                 todoList.addTask(taskName);
 
-                // Additional task details
                 cout << "\n✨ Would you like to add more details to this task? (y/n): ";
                 char more;
                 cin >> more;
                 if (more == 'y' || more == 'Y') {
                     string input;
                     
-                    // Priority
                     cout << "⭐️ Enter priority (1-5, or press Enter to skip): ";
                     cin.ignore();
                     getline(cin, input);
@@ -669,28 +575,24 @@ int main() {
                         todoList.setTaskPriority(todoList.getTaskCount() - 1, stoi(input));
                     }
 
-                    // Due date
                     cout << "📅 Enter due date (YYYY-MM-DD, or press Enter to skip): ";
                     getline(cin, input);
                     if (!input.empty()) {
                         todoList.setTaskDueDate(todoList.getTaskCount() - 1, input);
                     }
 
-                    // Category
                     cout << "🏷️  Enter category (or press Enter to skip): ";
                     getline(cin, input);
                     if (!input.empty()) {
                         todoList.addTaskCategory(todoList.getTaskCount() - 1, input);
                     }
 
-                    // Notes
                     cout << "📝 Enter any notes (or press Enter to skip): ";
                     getline(cin, input);
                     if (!input.empty()) {
                         todoList.addTaskNotes(todoList.getTaskCount() - 1, input);
                     }
 
-                    // Reminder
                     cout << "⏰ Enter reminder date (YYYY-MM-DD, or press Enter to skip): ";
                     getline(cin, input);
                     if (!input.empty()) {
@@ -746,7 +648,6 @@ int main() {
                 cout << "Enter due date (YYYY-MM-DD): ";
                 cin >> dueDate;
 
-                // Validate date format and values
                 if (dueDate.length() != 10 || dueDate[4] != '-' || dueDate[7] != '-') {
                     cout << "Invalid date format. Please use YYYY-MM-DD\n";
                     break;
@@ -762,7 +663,6 @@ int main() {
                         break;
                     }
 
-                    // Additional validation for days in month
                     bool isLeapYear = (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
                     int daysInMonth[] = {31, (isLeapYear ? 29 : 28), 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
                     if (day > daysInMonth[month - 1]) {
@@ -878,13 +778,11 @@ int main() {
             }
 
             case 18: {
-                // Undo
                 todoList.undo();
                 break;
             }
 
             case 19: {
-                // Redo
                 todoList.redo();
                 break;
             }
